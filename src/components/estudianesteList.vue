@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h1 class="title">Gestión de Estudiantes</h1>
+    <h1 class="title">Ficha de Estudiantes</h1>
 
     <!-- Formulario para agregar o editar estudiantes -->
     <div class="form-container">
@@ -47,11 +47,11 @@
         </div>
         <div class="form-group">
           <label for="problemasSalud">Problemas de Salud</label>
-          <input id="problemasSalud" v-model="formData.problemasSalud" placeholder="Problemas de Salud" required />
+          <input id="problemasSalud" v-model="formData.problemasSalud" placeholder="Problemas de Salud" />
         </div>
         <div class="form-group">
           <label for="tipoSangre">Tipo de Sangre</label>
-          <input id="tipoSangre" v-model="formData.tipoSangre" placeholder="Tipo de Sangre" required />
+          <input id="tipoSangre" v-model="formData.tipoSangre" placeholder="Tipo de Sangre" />
         </div>
         <div class="form-group">
           <label for="representanteId">Representante ID (opcional)</label>
@@ -129,9 +129,7 @@ export default {
       }
     },
     async createEstudiante() {
-
       try {
-        this.formData.fechaNacimiento = new Date(this.formData.fechaNacimiento).toISOString();
         await axios.post("http://localhost:3002/estudiantes", this.formData);
         this.resetForm();
         this.loadEstudiantes();
@@ -147,12 +145,7 @@ export default {
     },
     async updateEstudiante() {
       try {
-          this.formData.fechaNacimiento = new Date(this.formData.fechaNacimiento).toISOString();
-
-        await axios.put(
-          `http://localhost:3002/estudiantes/${this.currentId}`,
-          this.formData
-        );
+        await axios.put(`http://localhost:3002/estudiantes/${this.currentId}`, this.formData);
         this.isEditing = false;
         this.resetForm();
         this.loadEstudiantes();
@@ -294,6 +287,3 @@ tr:hover {
   background-color: #f1f1f1;
 }
 </style>
-
-
-const fecha = new Date(formData.fechaNacimiento).toISOString();  donde pongo eso 
