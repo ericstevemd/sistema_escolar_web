@@ -70,7 +70,7 @@
     <!-- Tabla de estudiantes -->
     <div class="table-container">
       <h2>Lista de Estudiantes</h2>
-      <table v-if="estudiantes.length">
+      <table v-if="estudiantes&&estudiantes.length">
         <thead>
           <tr>
             <th>Nombre</th>
@@ -99,8 +99,6 @@
             <td>{{estudiante.problemasDiscapacidad}}</td>
             <td>{{estudiante.problemasSalud}}</td>  
             <td>{{estudiante.tipoSangre}}</td>
-            
-
             <td>
               <button class="btn edit-btn" @click="editEstudiante(estudiante)">Editar</button>
               <button class="btn delete-btn" @click="deleteEstudiante(estudiante.id)">Eliminar</button>
@@ -109,6 +107,12 @@
         </tbody>
       </table>
       <p v-else>No hay estudiantes registrados.</p>
+      <div class="pagination-container">
+  <button @click="prevPage" :disabled="pagination.page === 1">Anterior</button>
+  <span>Página {{ pagination.page }} de {{ pagination.totalPages }}</span>
+  <button @click="nextPage" :disabled="pagination.page === pagination.totalPages">Siguiente</button>
+</div>
+    
     </div>
   </div>
 </template>
@@ -116,10 +120,16 @@
 <script>
 import axios from "axios";
 import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 export default {
   data() {
     return {
       estudiantes: [],
+      pagination: {
+      page: 1,
+      limit: 10,
+      totalPages: 1,
+    },
       formData: {
         nombre: "",
         cedula: "",
@@ -135,6 +145,7 @@ export default {
       },
       isEditing: false,
       currentId: null,
+      searchTerm: "",
     };
   },
  computed:{
@@ -145,30 +156,73 @@ export default {
   },
 }, 
   methods: {
-
-    descargarPDF() {
-    const doc = new jsPDF();
-    doc.text("Lista de Estudiantes", 20, 10);
-
-    let y = 20; // Posición vertical inicial
-    this.estudiantes.forEach((estudiante, index) => {
-      doc.text(
-        `${index + 1}. Nombre: ${estudiante.nombre} - Cédula: ${estudiante.cedula} - Edad: ${estudiante.edad}`,
-        20,
-        y
-      );
-      y += 10;
-    });
-
-    doc.save("lista_estudiantes.pdf");
+    async goToPage(page) {
+    if (page < 1 || page > this.pagination.totalPages) return; // Valida el rango
+    this.pagination.page = page;
+    await this.loadEstudiantes(); // Recarga la lista
   },
+  async nextPage() {
+    if (this.pagination.page < this.pagination.totalPages) {
+      this.pagination.page++;
+      await this.loadEstudiantes();
+    }
+  },
+  async prevPage() {
+    if (this.pagination.page > 1) {
+      this.pagination.page--;
+      await this.loadEstudiantes();
+    }
+  },
+    
+      descargarPDF() {
+      const doc = new jsPDF();
+
+      // Título del documento
+      doc.text("Lista de Estudiantes", 20, 10);
+
+      // Definir las columnas y las filas de la tabla
+      const columns = ["#", "Nombre", "Cédula", "Edad"];
+      const rows = this.estudiantes.map((estudiante, index) => [
+        index + 1,
+        estudiante.nombre,
+        estudiante.cedula,
+        estudiante.edad,
+      ]);
+
+      // Agregar la tabla al PDF
+      autoTable(doc, {
+        startY: 20, // Posición inicial de la tabla
+        head: [columns],
+        body: rows,
+      });
+
+      // Guardar el PDF
+      doc.save("lista_estudiantes.pdf");
+  
+     },
  async loadEstudiantes() {
       try {
-        const response = await axios.get("http://localhost:3002/estudiantes");
-        this.estudiantes = response.data;
+        const response = await axios.get("http://localhost:3002/estudiantes",{
+          params: {
+        page: this.pagination.page,
+        limit: this.pagination.limit,
+      },
+        });
+        if (response.status !== 200) {
+    throw new Error(`Error del servidor: Código ${response.status}`);
+  }
+   
+        this.estudiantes = response.data||[];
+        this.pagination.totalPages = response.data.meta.totalPages; 
       } catch (error) {
+        if (error.response) {
         console.error("Error al cargar los estudiantes:", error);
         alert("Error al cargar los estudiantes. Por favor, inténtelo de nuevo más tarde.");
+      }
+      
+
+      
+
       }
     },
     async createEstudiante() {
@@ -208,6 +262,7 @@ export default {
       }
     },
     resetForm() {
+     
       this.formData = {
         nombre: "",
         cedula: "",
