@@ -60,6 +60,12 @@
         <button class="btn load-btn" type="submit">{{ isEditing ? "Actualizar" : "Agregar" }}</button>
       </form>
     </div>
+    <div class="search-container">
+  <label for="search">Buscar por Cédula:</label>
+  <input id="search" v-model="searchTerm" placeholder="Ingrese la cédula" />
+</div>
+<button class="btn load-btn" @click="descargarPDF">Descargar PDF</button>
+
 
     <!-- Tabla de estudiantes -->
     <div class="table-container">
@@ -67,21 +73,34 @@
       <table v-if="estudiantes.length">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Nombre</th>
             <th>Cédula</th>
             <th>Género</th>
             <th>Edad</th>
+            <th>Nacionalidad</th>
+            <th>Fecha Nacimiento</th>
+            <th>Curso</th>
+            <th>Problemas Discapacidad</th>
+            <th>Problemas Salud</th>  
+            <th>Tipo Sangre</th>
+        
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="estudiante in estudiantes" :key="estudiante.id">
-            <td>{{ estudiante.id }}</td>
+          <tr v-for="estudiante in estudiantes" :key="estudiante.id"> 
             <td>{{ estudiante.nombre }}</td>
             <td>{{ estudiante.cedula }}</td>
             <td>{{ estudiante.genero }}</td>
             <td>{{ estudiante.edad }}</td>
+            <td>{{estudiante.nacionalidad }}</td>
+            <td>{{estudiante.fechaNacimiento}}</td>
+            <td>{{estudiante.curso}}</td>
+            <td>{{estudiante.problemasDiscapacidad}}</td>
+            <td>{{estudiante.problemasSalud}}</td>  
+            <td>{{estudiante.tipoSangre}}</td>
+            
+
             <td>
               <button class="btn edit-btn" @click="editEstudiante(estudiante)">Editar</button>
               <button class="btn delete-btn" @click="deleteEstudiante(estudiante.id)">Eliminar</button>
@@ -96,7 +115,7 @@
 
 <script>
 import axios from "axios";
-
+import { jsPDF } from "jspdf";
 export default {
   data() {
     return {
@@ -118,8 +137,32 @@ export default {
       currentId: null,
     };
   },
+ computed:{
+  estudiantesfliter() {
+    return this.estudiantes.filter(estudiante =>
+      estudiante.cedula.toLowerCase().includes(this.searchTerm.toLowerCase())
+      );
+  },
+}, 
   methods: {
-    async loadEstudiantes() {
+
+    descargarPDF() {
+    const doc = new jsPDF();
+    doc.text("Lista de Estudiantes", 20, 10);
+
+    let y = 20; // Posición vertical inicial
+    this.estudiantes.forEach((estudiante, index) => {
+      doc.text(
+        `${index + 1}. Nombre: ${estudiante.nombre} - Cédula: ${estudiante.cedula} - Edad: ${estudiante.edad}`,
+        20,
+        y
+      );
+      y += 10;
+    });
+
+    doc.save("lista_estudiantes.pdf");
+  },
+ async loadEstudiantes() {
       try {
         const response = await axios.get("http://localhost:3002/estudiantes");
         this.estudiantes = response.data;
