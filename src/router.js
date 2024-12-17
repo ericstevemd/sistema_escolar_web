@@ -7,7 +7,7 @@ import Homepage from './components/homepage.vue';
 
 
 const routes = [
-  { path: '/', name: 'homepage', component: Homepage },
+  
 
 { path: '/representantes', name: 'representantes', component: RepresentantesList },
 
