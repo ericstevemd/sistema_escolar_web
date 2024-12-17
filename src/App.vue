@@ -2,19 +2,23 @@
   <div id="app">
     <nav>
       <ul>
-        <li><router-link to="/">Home</router-link></li>
+        
+        <li><router-link to="/homepage">Home</router-link></li>
         <li><router-link to="/representantes">Representantes</router-link></li>
         <li><router-link to="/estudiantes">Estudiantes</router-link></li>
       </ul>
     </nav>
     <router-view /> <!-- Aquí se renderiza el componente según la ruta -->
+  i
   </div>
 </template>
 
 <script>
+
 export default {
   name: 'App',
 };
+
 </script>
 
 <style>

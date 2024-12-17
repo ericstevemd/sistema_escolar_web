@@ -53,16 +53,13 @@
           <label for="tipoSangre">Tipo de Sangre</label>
           <input id="tipoSangre" v-model="formData.tipoSangre" placeholder="Tipo de Sangre" />
         </div>
-        <div class="form-group">
-          <label for="representanteId">Representante ID (opcional)</label>
-          <input id="representanteId" v-model.number="formData.representanteId" type="number" placeholder="Representante ID" />
-        </div>
+       
         <button class="btn load-btn" type="submit">{{ isEditing ? "Actualizar" : "Agregar" }}</button>
       </form>
     </div>
     <div class="search-container">
-  <label for="search">Buscar por Cédula:</label>
-  <input id="search" v-model="searchTerm" placeholder="Ingrese la cédula" />
+  <label for="search">Buscar por Nombre:</label>
+  <input id="search" v-model="searchTerm" placeholder="Ingrese la Nombre" />
 </div>
 <button class="btn load-btn" @click="descargarPDF">Descargar PDF</button>
 
@@ -181,12 +178,13 @@ export default {
       doc.text("Lista de Estudiantes", 20, 10);
 
       // Definir las columnas y las filas de la tabla
-      const columns = ["#", "Nombre", "Cédula", "Edad"];
+      const columns = ["#", "Nombre", "Cédula", "Edad" ," Curso"];
       const rows = this.estudiantes.map((estudiante, index) => [
         index + 1,
         estudiante.nombre,
         estudiante.cedula,
         estudiante.edad,
+        estudiante.curso,
       ]);
 
       // Agregar la tabla al PDF
