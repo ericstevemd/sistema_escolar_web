@@ -200,6 +200,7 @@ export default {
      },
  async loadEstudiantes() {
       try {
+    
         const response = await axios.get("http://localhost:3002/estudiantes",{
           params: {
         page: this.pagination.page,
@@ -225,6 +226,7 @@ export default {
     },
     async createEstudiante() {
       try {
+        this.formData.fechaNacimiento = new Date(this.formData.fechaNacimiento).toISOString();
         await axios.post("http://localhost:3002/estudiantes", this.formData);
         this.resetForm();
         this.loadEstudiantes();
@@ -240,6 +242,7 @@ export default {
     },
     async updateEstudiante() {
       try {
+        this.formData.fechaNacimiento = new Date(this.formData.fechaNacimiento).toISOString();
         await axios.put(`http://localhost:3002/estudiantes/${this.currentId}`, this.formData);
         this.isEditing = false;
         this.resetForm();

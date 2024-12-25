@@ -225,6 +225,7 @@ export default {
       }
     },
     async createRepresentante() {
+      this.formData.fechaNacimiento = new Date(this.formData.fechaNacimiento).toISOString();
       // Validación frontend
       if (!this.newRepresentante.nombre || !this.newRepresentante.apellido || !this.newRepresentante.cedula ||
           !this.newRepresentante.nacionalidad || !this.newRepresentante.ciudad || !this.newRepresentante.correo ||
@@ -238,6 +239,7 @@ export default {
 
       try {
         await representantesService.create(this.newRepresentante);
+     
         this.loadRepresentantes();
         this.newRepresentante = {
           nombre: '',
@@ -289,6 +291,7 @@ export default {
 
   try {
     await representantesService.update(this.currentRepresentante.id, this.currentRepresentante);
+  
     this.isEditing = false;
     this.loadRepresentantes();
     this.currentRepresentante = null; // Limpiar el formulario de edición
