@@ -175,18 +175,20 @@ export default {
       const doc = new jsPDF();
 
       // Título del documento
-      doc.text("Lista de Estudiantes", 20, 10);
+      doc.text("Reporte de estudiantes", 20, 10);
 
       // Definir las columnas y las filas de la tabla
-      const columns = ["#", "Nombre", "Cédula", "Edad" ," Curso"];
+      const columns = ["#", "Nombre", "Cédula", "Edad" ," Curso",  "problemasSalud" ,"tipoSangre"];
       const rows = this.estudiantes.map((estudiante, index) => [
         index + 1,
         estudiante.nombre,
         estudiante.cedula,
         estudiante.edad,
         estudiante.curso,
-      ]);
+        estudiante.problemasSalud,
+        estudiante.tipoSangre
 
+      ]);
       // Agregar la tabla al PDF
       autoTable(doc, {
         startY: 20, // Posición inicial de la tabla
@@ -195,7 +197,7 @@ export default {
       });
 
       // Guardar el PDF
-      doc.save("lista_estudiantes.pdf");
+      doc.save("Reporte de estudiantes.pdf");
   
      },
  async loadEstudiantes() {

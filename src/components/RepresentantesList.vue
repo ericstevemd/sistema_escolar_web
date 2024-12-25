@@ -131,10 +131,15 @@
     <div v-if="errorMessage">
   <p style="color: red;">{{ errorMessage }}</p>
 </div>
+<input v-model="searchQuery" placeholder="Buscar representante..." />
+<div class="buttons">
+      <button class="btn load-btn" @click="loadRepresentantes">Cargar Representantes</button>
+      <button class="btn download-btn" @click="descargarPDF">Descargar PDF</button>
+    </div>
+
 
     <div class="table-container">
-      <button class="btn load-btn"  @click="loadRepresentantes">Cargar Representantes</button>
-      <table v-if="representantes.length">
+     <table v-if="representantes.length">
         <thead>
           <tr>
             <th>Nombre</th>
@@ -186,6 +191,8 @@
 
 <script>
 import { representantesService } from '../services/representantesService';
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default {
   data() {
@@ -212,7 +219,6 @@ export default {
       errorMessage: '',
     };
   },
-  
 
   methods: {
     async loadRepresentantes() {
@@ -225,7 +231,7 @@ export default {
       }
     },
     async createRepresentante() {
-      this.formData.fechaNacimiento = new Date(this.formData.fechaNacimiento).toISOString();
+
       // Validación frontend
       if (!this.newRepresentante.nombre || !this.newRepresentante.apellido || !this.newRepresentante.cedula ||
           !this.newRepresentante.nacionalidad || !this.newRepresentante.ciudad || !this.newRepresentante.correo ||
@@ -284,6 +290,7 @@ export default {
          !this.newRepresentante.genero ||
          !this.newRepresentante.cantidadRepresentados || 
          !this.newRepresentante.personasNoAutorizadas) {
+
         this.errorMessage = 'Por favor, complete todos los campos.';
         this.clearErrorMessage();
         return;
@@ -315,7 +322,63 @@ export default {
         this.errorMessage = '';
       }, 5000); // El mensaje de error desaparece después de 5 segundos
     }
-  }
+  },
+  computed: {
+    filteredRepresentantes() {
+        return this.representantes.filter(r => 
+            r.nombre.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+            r.apellido.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+            r.cedula.includes(this.searchQuery)
+        );
+    }
+},
+
+  descargarPDF() {
+  const doc = new jsPDF();
+
+  // Título del PDF
+  doc.setFontSize(18);
+  doc.text("Lista de Representantes", 14, 22);
+  // Define las columnas y los datos
+  const columns = [
+    "Nombre", 
+    "Apellido", 
+    "Cédula", 
+    "Nacionalidad", 
+    "Ciudad", 
+    "Correo", 
+    "Dirección", 
+    "Celular 1", 
+    "Género", 
+    "Cantidad Representados", 
+    "Personas No Autorizadas"
+  ];
+
+  const rows = this.representantes.map(representante => [
+    representante.nombre,
+    representante.apellido,
+    representante.cedula,
+    representante.nacionalidad,
+    representante.ciudad,
+    representante.correo,
+    representante.direccion_Domicilio,
+    representante.numeroCelular1,
+    representante.genero,
+    representante.cantidadRepresentados,
+    representante.personasNoAutorizadas,
+  ]);
+  // Generar la tabla con autoTable
+  autoTable(doc, {
+    head: [columns],
+    body: rows,
+    startY: 30,
+  });
+  // Guardar el PDF
+  doc.save("Reporte_de_Representantes.pdf");
+},
+
+
+  
 };
 </script>
 
