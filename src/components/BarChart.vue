@@ -21,7 +21,7 @@ import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
 export default {
-  name: "Charts",
+  name: "BarChartComponent",
   setup() {
     const rendimientoChart = ref(null);
     const materiasChart = ref(null);
