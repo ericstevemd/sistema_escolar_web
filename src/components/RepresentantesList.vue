@@ -134,7 +134,9 @@
 <input v-model="searchQuery" placeholder="Buscar representante..." />
 <div class="buttons">
       <button class="btn load-btn" @click="loadRepresentantes">Cargar Representantes</button>
-      <button class="btn download-btn" @click="descargarPDF">Descargar PDF</button>
+      <br/>
+
+      <button class="btn load-btn" @click="descargarPDF">Descargar PDF</button>
     </div>
 
 
@@ -273,7 +275,10 @@ export default {
       this.currentRepresentante = { ...representante }; // Cargar los datos del representante para editar
     },
    
-  
+    validateFields(obj) {
+    return Object.values(obj).every(value => value !== '');
+  },
+
       async updateRepresentante() {
  
       if (!this.newRepresentante.nombre ||
@@ -306,7 +311,7 @@ export default {
     this.errorMessage =
       error.response?.data?.message || 'Error al actualizar el representante.';
     this.clearErrorMessage();
-  }
+  }6
 },
     async removeRepresentante(id) {
       try {
@@ -333,53 +338,33 @@ export default {
     }
 },
 
-  descargarPDF() {
-  const doc = new jsPDF();
+descargarPDF() {
+      const doc = new jsPDF();
 
-  // Título del PDF
-  doc.setFontSize(18);
-  doc.text("Lista de Representantes", 14, 22);
-  // Define las columnas y los datos
-  const columns = [
-    "Nombre", 
-    "Apellido", 
-    "Cédula", 
-    "Nacionalidad", 
-    "Ciudad", 
-    "Correo", 
-    "Dirección", 
-    "Celular 1", 
-    "Género", 
-    "Cantidad Representados", 
-    "Personas No Autorizadas"
-  ];
+      // Título del documento
+      doc.text("Reporte de estudiantes", 20, 10);
 
-  const rows = this.representantes.map(representante => [
-    representante.nombre,
-    representante.apellido,
-    representante.cedula,
-    representante.nacionalidad,
-    representante.ciudad,
-    representante.correo,
-    representante.direccion_Domicilio,
-    representante.numeroCelular1,
-    representante.genero,
-    representante.cantidadRepresentados,
-    representante.personasNoAutorizadas,
-  ]);
-  // Generar la tabla con autoTable
-  autoTable(doc, {
-    head: [columns],
-    body: rows,
-    startY: 30,
-  });
-  // Guardar el PDF
-  doc.save("Reporte_de_Representantes.pdf");
-},
+      // Definir las columnas y las filas de la tabla
+      const columns = ["#", "Nombre", "Cédula", "Edad" ];
+      const rows = this.representantes.map((representante, index) => [
+        index + 1,
+        representante.nombre,
+        representante.cedula,
+        representante.edad
 
+      ]);
+      // Agregar la tabla al PDF
+      autoTable(doc, {
+        startY: 20, // Posición inicial de la tabla
+        head: [columns],
+        body: rows,
+      });
 
+      // Guardar el PDF
+      doc.save("Reporte_de_representantes.pdf");
   
-};
+     },
+     }
 </script>
 
 
