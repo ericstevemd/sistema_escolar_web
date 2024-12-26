@@ -215,6 +215,7 @@ export default {
         genero: '',
         cantidadRepresentados: '',
         personasNoAutorizadas: '',
+        searchQuery: '', // Filtro de búsqueda
       },
       currentRepresentante: null, // Para mantener el representante que se está editando
       isEditing: false,
@@ -223,6 +224,11 @@ export default {
   },
 
   methods: {
+   
+    validateFields(obj) {
+    return Object.values(obj).every(value => value !== '');
+  },
+
     async loadRepresentantes() {
       try {
         const response = await representantesService.getAll();
@@ -274,12 +280,9 @@ export default {
       this.isEditing = true; 
       this.currentRepresentante = { ...representante }; // Cargar los datos del representante para editar
     },
-   
-    validateFields(obj) {
-    return Object.values(obj).every(value => value !== '');
-  },
 
-      async updateRepresentante() {
+
+async updateRepresentante() {
  
       if (!this.newRepresentante.nombre ||
          !this.newRepresentante.apellido ||
@@ -311,8 +314,40 @@ export default {
     this.errorMessage =
       error.response?.data?.message || 'Error al actualizar el representante.';
     this.clearErrorMessage();
-  }6
-},
+  }
+}, 
+
+
+/* async updateRepresentante() {
+    if (!this.currentRepresentante.nombre || 
+        !this.currentRepresentante.apellido || 
+        !this.currentRepresentante.cedula || 
+        !this.currentRepresentante.nacionalidad || 
+        !this.currentRepresentante.ciudad || 
+        !this.currentRepresentante.correo || 
+        !this.currentRepresentante.direccion_Domicilio || 
+        !this.currentRepresentante.foto || 
+        !this.currentRepresentante.numeroCelular1 || 
+        !this.currentRepresentante.numeroCelular2 || 
+        !this.currentRepresentante.numeroCelular3 || 
+        !this.currentRepresentante.genero || 
+        !this.currentRepresentante.cantidadRepresentados || 
+        !this.currentRepresentante.personasNoAutorizadas) {
+        this.errorMessage = 'Por favor, complete todos los campos.';
+        this.clearErrorMessage();
+        return;
+    }
+    try {
+        await representantesService.update(this.currentRepresentante.id, this.currentRepresentante);
+        this.isEditing = false;
+        this.loadRepresentantes();
+        this.currentRepresentante = null; // Limpia el formulario de edición
+    } catch (error) {
+        this.errorMessage = 'Error al actualizar el representante.';
+        this.clearErrorMessage();
+    }
+}, */
+
     async removeRepresentante(id) {
       try {
         await representantesService.delete(id);
@@ -337,33 +372,30 @@ export default {
         );
     }
 },
-
 descargarPDF() {
-      const doc = new jsPDF();
+    const doc = new jsPDF();
+    doc.text("Reporte de Representantes", 20, 10);
 
-      // Título del documento
-      doc.text("Reporte de estudiantes", 20, 10);
-
-      // Definir las columnas y las filas de la tabla
-      const columns = ["#", "Nombre", "Cédula", "Edad" ];
-      const rows = this.representantes.map((representante, index) => [
+    const columns = ["#", "Nombre", "Apellido", "Cédula", "Ciudad", "Género"];
+    const rows = this.representantes.map((representante, index) => [
         index + 1,
         representante.nombre,
+        representante.apellido,
         representante.cedula,
-        representante.edad
+        representante.ciudad,
+        representante.genero
+    ]);
 
-      ]);
-      // Agregar la tabla al PDF
-      autoTable(doc, {
-        startY: 20, // Posición inicial de la tabla
+    autoTable(doc, {
+        startY: 20,
         head: [columns],
         body: rows,
-      });
+    });
 
-      // Guardar el PDF
-      doc.save("Reporte_de_representantes.pdf");
-  
-     },
+    doc.save("Reporte_de_representantes.pdf");
+}
+
+
      }
 </script>
 
