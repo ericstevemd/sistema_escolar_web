@@ -8,11 +8,11 @@
       <form  class="form-container" @submit.prevent="createRepresentante">
         <div class="form-group">
         <label for="Nombre">Nombre</label>
-        <input v-model="newRepresentante.nombre" placeholder="Nombre" required />
+        <input v-model="newRepresentante.nombre" @input="logField('nombre')" placeholder="Nombre" required />
       </div>
         <div class="form-group">
         <label for="Apellido">Apellido</label>
-        <input v-model="newRepresentante.apellido" placeholder="Apellido" required />
+        <input v-model="newRepresentante.apellido" @input="logField('apellido')" placeholder="Apellido" required />
       </div>
         <div class="form-group">       
         <label for="Cédula">Cédula</label>
@@ -114,7 +114,7 @@
         <input v-model="currentRepresentante.numeroCelular3" placeholder="Celular 3" required />
       </div>
       <div class="form-group"> 
-        <label for="Género ">Género</label>
+        <label for="Genero ">Género</label>
         <input v-model="currentRepresentante.genero" placeholder="Género" required />
       </div>
       <div class="form-group"> 
@@ -215,16 +215,23 @@ export default {
         genero: '',
         cantidadRepresentados: '',
         personasNoAutorizadas: '',
-        searchQuery: '', // Filtro de búsqueda
       },
-      currentRepresentante: null, // Para mantener el representante que se está editando
+     currentRepresentante: null, // Para mantener el representante que se está editando
       isEditing: false,
       errorMessage: '',
     };
   },
 
   methods: {
-   
+    logField(fieldName) {
+    console.log(`Campo actualizado: ${fieldName}`, this.newRepresentante[fieldName]);
+
+  },
+    onFormSubmit() {
+    console.log('Datos actuales antes de enviar:', this.newRepresentante);
+    this.updateRepresentante();
+  },
+
     validateFields(obj) {
     return Object.values(obj).every(value => value !== '');
   },
@@ -268,7 +275,7 @@ export default {
           numeroCelular2: '',
           numeroCelular3: '',
           genero: '',
-          cantidadRepresentados: '',
+          cantidadRepresentados: 0,
           personasNoAutorizadas: ''
         };
       } catch (error) {
@@ -277,27 +284,38 @@ export default {
       }
     },
     async editRepresentante(representante) {
-      this.isEditing = true; 
-      this.currentRepresentante = { ...representante }; // Cargar los datos del representante para editar
-    },
+    if (!representante || typeof representante !== 'object') {
+        console.error('Representante inválido o no definido.');
+        return;
+    }
 
+    try {
+        this.isEditing = true; 
+        this.currentRepresentante = { ...representante }; // Clonar los datos del representante para evitar referencias directas
 
+        // Opcional: Agregar lógica adicional, como cargar datos del servidor si es necesario
+        console.log('Representante listo para edición:', this.currentRepresentante);
+    } catch (error) {
+        console.error('Error al iniciar la edición del representante:', error);
+    }
+},
 async updateRepresentante() {
- 
-      if (!this.newRepresentante.nombre ||
-         !this.newRepresentante.apellido ||
-         !this.newRepresentante.cedula ||
-         !this.newRepresentante.nacionalidad || 
-         !this.newRepresentante.ciudad || 
-         !this.newRepresentante.correo ||
-         !this.newRepresentante.direccion_Domicilio ||
-         !this.newRepresentante.foto || 
-         !this.newRepresentante.numeroCelular1 ||
-         !this.newRepresentante.numeroCelular2 ||
-         !this.newRepresentante.numeroCelular3 ||
-         !this.newRepresentante.genero ||
-         !this.newRepresentante.cantidadRepresentados || 
-         !this.newRepresentante.personasNoAutorizadas) {
+ // console.log('Datos del nuevo representante antes de validar:', this.newRepresentante);
+
+      if (!this.newRepresentante.nombre.trim()  ||
+         !this.newRepresentante.apellido.trim() ||
+         !this.newRepresentante.cedula.trim()  ||
+         !this.newRepresentante.nacionalidad.trim() || 
+         !this.newRepresentante.ciudad.trim() || 
+         !this.newRepresentante.correo.trim()  ||
+         !this.newRepresentante.direccion_Domicilio.trim()  ||
+         !this.newRepresentante.foto.trim()  || 
+         !this.newRepresentante.numeroCelular1.trim()  ||
+         !this.newRepresentante.numeroCelular2.trim()  ||
+         !this.newRepresentante.numeroCelular3.trim() ||
+         !this.newRepresentante.genero.trim()  ||
+         !this.newRepresentante.cantidadRepresentados.trim()  || 
+         !this.newRepresentante.personasNoAutorizadas.trim() ) {
 
         this.errorMessage = 'Por favor, complete todos los campos.';
         this.clearErrorMessage();
@@ -305,6 +323,8 @@ async updateRepresentante() {
       }
 
   try {
+    console.log('Enviando datos al servicio:', this.currentRepresentante);
+
     await representantesService.update(this.currentRepresentante.id, this.currentRepresentante);
   
     this.isEditing = false;
