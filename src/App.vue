@@ -4,14 +4,15 @@
       <ul>
         <li><router-link to="/">Home</router-link></li>
         <li><router-link to="/usuarios">Usuario</router-link></li> 
-        <li><router-link to="/materia">Materia </router-link></li>
+       
          <li class="submenu">
           <a href="#">Docentes</a>
           <ul class="sub-menu">
             <li><router-link to="/profesores">Profesor </router-link></li>
-            <li><router-link to="/asistencias">Asistencias</router-link></li>
+            <li><router-link to="/actividades">actividades</router-link></li>
             <li><router-link to="/subir-tareas">Subir Tareas</router-link></li>
             <li><router-link to="/novedades">Novedades</router-link></li>
+            <li><router-link to="/materia">Materia </router-link></li>
        
           </ul>
         </li>

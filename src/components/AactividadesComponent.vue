@@ -1,13 +1,13 @@
 <template>
-  <div class="container">
+  <div class="container mx-auto">
     <h1 class="text-3xl font-bold mb-6">Lista de Actividades</h1>
 
     <!-- Formulario para agregar actividad -->
-    <div class="form bg-white p-8 rounded-lg shadow-lg">
-      <h2 class="text-xl font-semibold mb-6">Agregar Nueva Actividad</h2>
-      <form @submit.prevent="addActividad" class="grid gap-6">
+    <div class="form bg-white p-6 rounded-lg shadow-xl">
+      <h2 class="text-xl font-semibold text-center mb-4">Agregar Nueva Actividad</h2>
+      <form @submit.prevent="addActividad" class="space-y-6">
         <div class="form-group">
-          <label for="nombre" class="text-lg font-medium text-gray-700">Nombre de la actividad</label>
+          <label for="nombre">Nombre de la actividad</label>
           <input
             type="text"
             id="nombre"
@@ -19,7 +19,7 @@
         </div>
 
         <div class="form-group">
-          <label for="descripcion" class="text-lg font-medium text-gray-700">Descripción</label>
+          <label for="descripcion">Descripción</label>
           <textarea
             id="descripcion"
             v-model="newActividad.descripcion"
@@ -30,7 +30,7 @@
         </div>
 
         <div class="form-group">
-          <label for="fecha" class="text-lg font-medium text-gray-700">Fecha</label>
+          <label for="fecha">Fecha</label>
           <input
             type="date"
             id="fecha"
@@ -41,7 +41,7 @@
         </div>
 
         <div class="form-group">
-          <label for="foto" class="text-lg font-medium text-gray-700">Subir Foto</label>
+          <label for="foto">Foto</label>
           <input
             type="file"
             id="foto"
@@ -61,37 +61,38 @@
     </div>
 
     <!-- Mostrar error si existe -->
-    <div v-if="error" class="error mt-4 text-red-600 text-sm font-medium">
+    <div v-if="error" class="error bg-red-100 text-red-800 p-3 rounded-md mb-6 text-center">
       {{ error }}
     </div>
 
     <!-- Mostrar actividades mientras se cargan o si ya hay datos -->
-    <div v-if="isLoading" class="text-center text-gray-500 text-lg">Cargando actividades...</div>
-    <div v-else>
-      <ul class="user-list mt-8">
-        <li
-          v-for="actividad in actividades"
-          :key="actividad.id"
-          class="user-item p-4 mb-4 bg-white rounded-lg shadow-md border border-gray-200"
-        >
-          <div>
-            <h3 class="font-semibold text-xl">{{ actividad.nombre }}</h3>
-            <p class="text-sm text-gray-600">{{ actividad.descripcion }}</p>
-            <p class="text-sm text-gray-500">Fecha: {{ formatDate(actividad.fecha) }}</p>
-          </div>
-          <div class="mt-2 flex justify-end gap-2">
+    <div v-if="isLoading" class="text-center text-gray-500">Cargando actividades...</div>
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div
+        v-for="actividad in actividades"
+        :key="actividad.id"
+        class="user-item"
+      >
+        <img
+          :src="`http://158.220.124.141:3002${actividad.foto}`"
+          alt="Actividad"
+          class="w-full h-48 object-cover rounded-lg mb-4"
+        />
+        <div>
+          <h2 class="text-lg font-semibold">{{ actividad.nombre }}</h2>
+          <p class="text-sm text-gray-600 mb-3">{{ actividad.descripcion }}</p>
+          <p class="text-sm text-gray-500">Fecha: {{ formatDate(actividad.fecha) }}</p>
+          <div class="flex justify-between mt-4">
             <button class="btn-edit">Editar</button>
-            <button @click="deleteActividad(actividad.id)" class="btn-delete">Eliminar</button>
+            <button class="btn-delete" @click="deleteActividad(actividad.id)">Eliminar</button>
           </div>
-        </li>
-      </ul>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-
-
 import axios from "axios";
 
 export default {
@@ -105,7 +106,7 @@ export default {
         nombre: '',
         descripcion: '',
         fecha: '',
-        foto: null // Cambiar de string a null inicialmente
+        foto: ''
       }
     };
   },
@@ -120,47 +121,48 @@ export default {
         this.isLoading = false;
       }
     },
-    async addActividad() {
-      const formData = new FormData();
-      formData.append("nombre", this.newActividad.nombre);
-      formData.append("descripcion", this.newActividad.descripcion);
-      formData.append("fecha", this.newActividad.fecha);
-      
-      // Omitir la foto para probar
-      // formData.append("foto", this.newActividad.foto);
-
-      try {
-        const response = await axios.post("http://158.220.124.141:3002/actividad", formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        this.actividades.push(response.data); // Agregar la nueva actividad a la lista
-        this.newActividad = { nombre: '', descripcion: '', fecha: '', foto: null }; // Limpiar formulario
-      } catch (err) {
-        console.error(err); // Ver más detalles del error
-        this.error = "Error al agregar la actividad. Intenta nuevamente.";
-      }
-    },
-
     handleFileUpload(event) {
       const file = event.target.files[0];
       if (file) {
         this.newActividad.foto = file;
       }
     },
+    async addActividad() {
+      if (!this.newActividad.nombre || !this.newActividad.descripcion || !this.newActividad.fecha || !this.newActividad.foto) {
+        this.error = "Por favor complete todos los campos antes de enviar.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("nombre", this.newActividad.nombre);
+      formData.append("descripcion", this.newActividad.descripcion);
+      formData.append("fecha", this.newActividad.fecha);
+      formData.append("foto", this.newActividad.foto);
+
+      try {
+        const response = await axios.post("http://158.220.124.141:3002/actividad", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        this.actividades.push(response.data); // Agregar la nueva actividad a la lista
+        this.newActividad = { nombre: "", descripcion: "", fecha: "", foto: "" }; // Limpiar formulario
+        this.error = null; // Limpiar mensaje de error
+      } catch (err) {
+        this.error = "Error al agregar la actividad. Intenta nuevamente.";
+      }
+    },
+    deleteActividad(id) {
+      axios.delete(`http://158.220.124.141:3002/actividad/${id}`).then(() => {
+        this.actividades = this.actividades.filter(actividad => actividad.id !== id);
+      }).catch(() => {
+        this.error = "Error al eliminar la actividad. Intenta nuevamente.";
+      });
+    },
     formatDate(dateString) {
       const options = { year: "numeric", month: "long", day: "numeric" };
       return new Date(dateString).toLocaleDateString("es-ES", options);
     },
-    async deleteActividad(id) {
-      try {
-        await axios.delete(`http://158.220.124.141:3002/actividad/${id}`);
-        this.actividades = this.actividades.filter(actividad => actividad.id !== id);
-      } catch (err) {
-        this.error = "Error al eliminar la actividad. Intenta nuevamente.";
-      }
-    }
   },
   mounted() {
     this.fetchActividades();
@@ -242,13 +244,9 @@ button:hover {
   background-color: #218838;
 }
 
-.user-list {
-  list-style-type: none;
-  padding: 0;
-}
-
 .user-item {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   padding: 20px;
   border-radius: 8px;
