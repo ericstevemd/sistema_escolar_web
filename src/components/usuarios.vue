@@ -1,124 +1,333 @@
 <template>
-  <div>
-    <h1>Crear Usuario</h1>
-    <form @submit.prevent="createUser">
-      <div>
+  <div class="container">
+    <h1>Gestionar Usuarios</h1>
+
+    <!-- Crear Usuario -->
+    <form @submit.prevent="createUser" class="form">
+      <div class="form-group">
         <label for="cedula">Cédula:</label>
-        <input type="text" v-model="user.cedula" required />
+        <input
+          type="text"
+          v-model="user.cedula"
+          id="cedula"
+          required
+          :class="{ invalid: errors.cedula }"
+        />
+        <span v-if="errors.cedula" class="error">{{ errors.cedula }}</span>
       </div>
-      <div>
+
+      <div class="form-group">
         <label for="email">Correo:</label>
-        <input type="email" v-model="user.email" required />
+        <input
+          type="email"
+          v-model="user.correo"
+          id="email"
+          required
+          :class="{ invalid: errors.email }"
+        />
+        <span v-if="errors.email" class="error">{{ errors.email }}</span>
       </div>
-      <div>
+
+      <div class="form-group">
         <label for="password">Contraseña:</label>
-        <input type="password" v-model="user.password" required />
+        <input
+          type="password"
+          v-model="user.password"
+          id="password"
+          required
+          :class="{ invalid: errors.password }"
+        />
+        <span v-if="errors.password" class="error">{{ errors.password }}</span>
       </div>
-      <div>
+
+      <div class="form-group">
         <label for="rol">Rol:</label>
-        <select v-model="user.rol" required>
+        <select
+          v-model="user.rol"
+          id="rol"
+          required
+          :class="{ invalid: errors.rol }"
+        >
           <option value="" disabled>Seleccionar rol</option>
           <option value="PROFESOR">Profesor</option>
           <option value="REPRESENTANTE">Estudiante</option>
           <option value="ADMIN">Administrador</option>
         </select>
+        <span v-if="errors.rol" class="error">{{ errors.rol }}</span>
       </div>
-      <button type="submit">Crear Usuario</button>
+
+      <button type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? "Creando..." : "Crear Usuario" }}
+      </button>
     </form>
-    <p v-if="message">{{ message }}</p>
+
+    <!-- Mensaje de estado -->
+    <p v-if="message" :class="{ success, error: !success }">
+      {{ message }}
+    </p>
+
+    <!-- Lista de Usuarios -->
+    <h2>Usuarios Registrados</h2>
+    <ul>
+      <li v-for="usuario in usuarios" :key="usuario.id">
+        {{ usuario.cedula }} - {{ usuario.correo }} - {{ usuario.rol }}
+        <button @click="editUser(usuario)">Editar</button>
+        <button @click="deleteUser(usuario.id)">Eliminar</button>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 export default {
-  name: 'CrearUsuario',
+  name: "GestionarUsuarios",
   data() {
     return {
       user: {
-        cedula: '',
-        email: '',
-        password: '',
-        rol: '', // Agregado para el rol
+        cedula: "",
+        correo: "",
+        password: "",
+        rol: "",
+        sesionIniciada: true,  // Asignado como booleano
+        isDeleted: false,      // Asignado como booleano
       },
-      message: '',
-      api: null, // Axios instance
+      usuarios: [],
+      message: "",
+      success: false,
+      isSubmitting: false,
+      errors: {},
+      api: axios.create({
+        baseURL: "http://158.220.124.141:3002/",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
     };
   },
-  created() {
-    // Configuración de Axios
-    this.api = axios.create({
-      baseURL: 'http://localhost:3002', // Cambia esto a la URL de tu API
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  mounted() {
+    this.fetchUsers(); // Cargar usuarios al inicio
   },
   methods: {
     async createUser() {
+  this.resetMessages();
+  if (!this.validateForm()) return;
+
+  this.isSubmitting = true;
+  try {
+    await this.api.post("/usuario", this.user);
+    this.message = `Usuario creado exitosamente: ${this.user.cedula}`;
+    this.success = true;
+    this.resetForm();
+    this.fetchUsers(); // Actualizar lista de usuarios
+  } catch (error) {
+    this.handleApiError(error);
+    this.success = false;
+  } finally {
+    this.isSubmitting = false;
+  }
+},
+    async fetchUsers() {
       try {
-        const response = await this.api.post('/usuario', this.user);
-        this.message = 'Usuario creado exitosamente: ' + response.data.cedula;
-        this.resetForm();
+        const response = await this.api.get("/usuarios");
+        this.usuarios = response.data.data; // Acceder a los usuarios
       } catch (error) {
-        this.message =
-          'Error al crear el usuario: ' +
-          (error.response?.data?.message || error.message);
+        console.error("Error al obtener usuarios:", error);
       }
     },
+    editUser(usuario) {
+      this.user = { ...usuario }; // Cargar datos en el formulario para editar
+    },
+    async updateUser() {
+      if (!this.validateForm()) return;
+      this.isSubmitting = true;
+      try {
+        await this.api.put(`/usuario/${this.user.id}`, this.user);
+        this.message = `Usuario actualizado: ${this.user.cedula}`;
+        this.success = true;
+        this.resetForm();
+        this.fetchUsers();
+      } catch (error) {
+        this.handleApiError(error);
+        this.success = false;
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+    async deleteUser(id) {
+      if (confirm("¿Estás seguro de eliminar este usuario?")) {
+        try {
+          await this.api.delete(`/usuario/${id}`);
+          this.message = `Usuario eliminado: ${id}`;
+          this.success = true;
+          this.fetchUsers();
+        } catch (error) {
+          this.handleApiError(error);
+          this.success = false;
+        }
+      }
+    },
+    validateForm() {
+      this.errors = {};
+      if (!this.user.cedula) this.errors.cedula = "La cédula es obligatoria.";
+      if (!this.user.correo) this.errors.email = "El correo es obligatorio.";
+      else if (!this.validateEmail(this.user.correo)) this.errors.email = "El correo no es válido.";
+      if (!this.user.password) this.errors.password = "La contraseña es obligatoria.";
+      else if (this.user.password.length < 6) this.errors.password = "Debe tener al menos 6 caracteres.";
+      if (!this.user.rol) this.errors.rol = "El rol es obligatorio.";
+      return Object.keys(this.errors).length === 0;
+    },
+    validateEmail(email) {
+      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return regex.test(email);
+    },
+    resetMessages() {
+      this.message = "";
+      this.success = false;
+      this.errors = {};
+    },
     resetForm() {
-      this.user.cedula = '';
-      this.user.email = '';
-      this.user.password = '';
-      this.user.rol = ''; // Resetear el rol
+      this.user = {
+        cedula: "",
+        correo: "",
+        password: "",
+        rol: "",
+      };
+    },
+    handleApiError(error) {
+      if (error.response?.data && Array.isArray(error.response.data)) {
+        error.response.data.forEach((errMsg) => {
+          if (errMsg.includes("correo")) {
+            this.errors.email = this.formatError(errMsg, "Correo");
+          }
+        });
+      } else {
+        this.message = error.response?.data?.message || "Ocurrió un error al intentar crear el usuario.";
+      }
+    },
+    formatError(message, field) {
+      return `${field}: ${message}`;
     },
   },
 };
 </script>
 
-<style>
-/* Añade estilos según sea necesario */
-body {
-  font-family: Arial, sans-serif;
+
+<style scoped>
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-form {
-  max-width: 400px;
-  margin: auto;
+h1, h2 {
+  text-align: center;
+  color: #333;
 }
 
-div {
-  margin-bottom: 15px;
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
 }
 
 label {
-  display: block;
   font-weight: bold;
+  color: #333;
 }
 
-input,
-select {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
+input, select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+input.invalid, select.invalid {
+  border-color: red;
+}
+
+.error {
+  color: red;
+  font-size: 12px;
 }
 
 button {
-  background-color: #4caf50;
-  color: white;
+  padding: 10px 15px;
   border: none;
-  padding: 10px 20px;
+  border-radius: 4px;
+  background-color: #007BFF;
+  color: white;
+  font-size: 16px;
   cursor: pointer;
 }
 
-button:hover {
-  background-color: #45a049;
+button:disabled {
+  background-color: #cccccc;
 }
 
-p {
-  text-align: center;
-  font-weight: bold;
-  color: #ff0000;
+button:hover {
+  background-color: #0056b3;
+}
+
+.submit-btn {
+  background-color: #28a745;
+}
+
+.submit-btn:hover {
+  background-color: #218838;
+}
+
+.user-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.user-item button {
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-edit {
+  background-color: #ffc107;
+}
+
+.btn-edit:hover {
+  background-color: #e0a800;
+}
+
+.btn-delete {
+  background-color: #dc3545;
+}
+
+.btn-delete:hover {
+  background-color: #c82333;
+}
+
+.success {
+  color: green;
+  font-size: 14px;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
 }
 </style>
