@@ -203,7 +203,7 @@ export default {
  async loadEstudiantes() {
       try {
     
-        const response = await axios.get("http://localhost:3002/estudiantes",{
+        const response = await axios.get("http://158.220.124.141:3002/estudiantes",{
           params: {
         page: this.pagination.page,
         limit: this.pagination.limit,

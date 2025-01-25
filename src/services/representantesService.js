@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3002/representantes';  // Cambia la URL si es necesario
+const API_URL = 'http://158.220.124.141:3002/representantes';  // Cambia la URL si es necesario
 
 export const representantesService = {
   getAll() {
