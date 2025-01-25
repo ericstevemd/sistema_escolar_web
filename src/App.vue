@@ -3,6 +3,7 @@
     <nav>
       <ul>
         <li><router-link to="/">home</router-link></li>
+        <li><router-link to="/usuarios">usuario</router-link></li>
         <li><router-link to="/representantes">Representantes</router-link></li>
         <li><router-link to="/estudiantes">Estudiantes</router-link></li>
       </ul>
