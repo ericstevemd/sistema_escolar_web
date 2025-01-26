@@ -2,10 +2,9 @@
   <div id="app">
     <nav>
       <ul>
-        <li><router-link to="/">Home</router-link></li>
+        <li><router-link to="/home">Home</router-link></li>
         <li><router-link to="/usuarios">Usuario</router-link></li> 
-       
-         <li class="submenu">
+        <li class="submenu">
           <a href="#">Docentes</a>
           <ul class="sub-menu">
             <li><router-link to="/profesores">Profesor </router-link></li>
