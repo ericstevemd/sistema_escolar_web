@@ -1,181 +1,227 @@
 <template>
   <div class="container">
-    <h1 class="text-3xl font-bold mb-6">Lista de Actividades</h1>
+    <h1>Gestionar Usuarios</h1>
 
-    <!-- Formulario para agregar actividad -->
-    <div class="form bg-white p-8 rounded-lg shadow-lg">
-      <h2 class="text-xl font-semibold mb-6">Agregar Nueva Actividad</h2>
-      <form @submit.prevent="addActividad" class="grid gap-6">
-        <div class="form-group">
-          <label for="nombre" class="text-lg font-medium text-gray-700">Nombre de la actividad</label>
-          <input
-            type="text"
-            id="nombre"
-            v-model="newActividad.nombre"
-            class="input-field"
-            placeholder="Escribe el nombre"
-            required
-          />
-        </div>
+    <!-- Crear Usuario -->
+    <form @submit.prevent="createUser" class="form">
+      <div class="form-group">
+        <label for="cedula">Cédula:</label>
+        <input
+          type="text"
+          v-model="user.cedula"
+          id="cedula"
+          required
+          :class="{ invalid: errors.cedula }"
+        />
+        <span v-if="errors.cedula" class="error">{{ errors.cedula }}</span>
+      </div>
 
-        <div class="form-group">
-          <label for="descripcion" class="text-lg font-medium text-gray-700">Descripción</label>
-          <textarea
-            id="descripcion"
-            v-model="newActividad.descripcion"
-            class="input-field"
-            placeholder="Escribe la descripción"
-            required
-          ></textarea>
-        </div>
+      <div class="form-group">
+        <label for="email">Correo:</label>
+        <input
+          type="email"
+          v-model="user.correo"
+          id="email"
+          required
+          :class="{ invalid: errors.email }"
+        />
+        <span v-if="errors.email" class="error">{{ errors.email }}</span>
+      </div>
 
-        <div class="form-group">
-          <label for="fecha" class="text-lg font-medium text-gray-700">Fecha</label>
-          <input
-            type="date"
-            id="fecha"
-            v-model="newActividad.fecha"
-            class="input-field"
-            required
-          />
-        </div>
+      <div class="form-group">
+        <label for="password">Contraseña:</label>
+        <input
+          type="password"
+          v-model="user.password"
+          id="password"
+          required
+          :class="{ invalid: errors.password }"
+        />
+        <span v-if="errors.password" class="error">{{ errors.password }}</span>
+      </div>
 
-        <div class="form-group">
-          <label for="foto" class="text-lg font-medium text-gray-700">Subir Foto</label>
-          <input
-            type="file"
-            id="foto"
-            @change="handleFileUpload"
-            class="input-file"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          class="submit-btn w-full"
+      <div class="form-group">
+        <label for="rol">Rol:</label>
+        <select
+          v-model="user.rol"
+          id="rol"
+          required
+          :class="{ invalid: errors.rol }"
         >
-          Agregar Actividad
-        </button>
-      </form>
-    </div>
+          <option value="" disabled>Seleccionar rol</option>
+          <option value="PROFESOR">Profesor</option>
+          <option value="REPRESENTANTE">Estudiante</option>
+          <option value="ADMIN">Administrador</option>
+        </select>
+        <span v-if="errors.rol" class="error">{{ errors.rol }}</span>
+      </div>
 
-    <!-- Mostrar error si existe -->
-    <div v-if="error" class="error mt-4 text-red-600 text-sm font-medium">
-      {{ error }}
-    </div>
+      <button type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? "Creando..." : "Crear Usuario" }}
+      </button>
+    </form>
 
-    <!-- Mostrar actividades mientras se cargan o si ya hay datos -->
-    <div v-if="isLoading" class="text-center text-gray-500 text-lg">Cargando actividades...</div>
-    <div v-else>
-      <ul class="user-list mt-8">
-        <li
-          v-for="actividad in actividades"
-          :key="actividad.id"
-          class="user-item p-4 mb-4 bg-white rounded-lg shadow-md border border-gray-200"
-        >
-          <div>
-            <h3 class="font-semibold text-xl">{{ actividad.nombre }}</h3>
-            <p class="text-sm text-gray-600">{{ actividad.descripcion }}</p>
-            <p class="text-sm text-gray-500">Fecha: {{ formatDate(actividad.fecha) }}</p>
-          </div>
-          <div class="mt-2 flex justify-end gap-2">
-            <button class="btn-edit">Editar</button>
-            <button @click="deleteActividad(actividad.id)" class="btn-delete">Eliminar</button>
-          </div>
-        </li>
-      </ul>
-    </div>
+    <!-- Mensaje de estado -->
+    <p v-if="message" :class="{ success, error: !success }">
+      {{ message }}
+    </p>
+
+    <!-- Lista de Usuarios -->
+    <h2>Usuarios Registrados</h2>
+    <ul>
+      <li v-for="usuario in usuarios" :key="usuario.id">
+        {{ usuario.cedula }} - {{ usuario.correo }} - {{ usuario.rol }}
+        <button @click="editUser(usuario)">Editar</button>
+        <button @click="deleteUser(usuario.id)">Eliminar</button>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script>
-
-
 import axios from "axios";
 
 export default {
-  name: 'ActividadesLista',
+  name: "GestionarUsuarios",
   data() {
     return {
-      actividades: [],
-      isLoading: true,
-      error: null,
-      newActividad: {
-        nombre: '',
-        descripcion: '',
-        fecha: '',
-        foto: null // Cambiar de string a null inicialmente
-      }
+      user: {
+        cedula: "",
+        correo: "",
+        password: "",
+        rol: "",
+        sesionIniciada: true,  // Asignado como booleano
+        isDeleted: false,      // Asignado como booleano
+      },
+      usuarios: [],
+      message: "",
+      success: false,
+      isSubmitting: false,
+      errors: {},
+      api: axios.create({
+        baseURL: "http://158.220.124.141:3002/",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
     };
   },
+  mounted() {
+    this.fetchUsers(); // Cargar usuarios al inicio
+  },
   methods: {
-    async fetchActividades() {
+    async createUser() {
+  this.resetMessages();
+  if (!this.validateForm()) return;
+
+  this.isSubmitting = true;
+  try {
+    await this.api.post("/usuario", this.user);
+    this.message = `Usuario creado exitosamente: ${this.user.cedula}`;
+    this.success = true;
+    this.resetForm();
+    this.fetchUsers(); // Actualizar lista de usuarios
+  } catch (error) {
+    this.handleApiError(error);
+    this.success = false;
+  } finally {
+    this.isSubmitting = false;
+  }
+},
+    async fetchUsers() {
       try {
-        const response = await axios.get("http://158.220.124.141:3002/actividad");
-        this.actividades = response.data;
-      } catch (err) {
-        this.error = "Error al cargar las actividades. Intenta nuevamente.";
-      } finally {
-        this.isLoading = false;
+        const response = await this.api.get("/usuarios");
+        this.usuarios = response.data.data; // Acceder a los usuarios
+      } catch (error) {
+        console.error("Error al obtener usuarios:", error);
       }
     },
-    async addActividad() {
-      const formData = new FormData();
-      formData.append("nombre", this.newActividad.nombre);
-      formData.append("descripcion", this.newActividad.descripcion);
-      formData.append("fecha", this.newActividad.fecha);
-      
-      // Omitir la foto para probar
-      // formData.append("foto", this.newActividad.foto);
-
+    editUser(usuario) {
+      this.user = { ...usuario }; // Cargar datos en el formulario para editar
+    },
+    async updateUser() {
+      if (!this.validateForm()) return;
+      this.isSubmitting = true;
       try {
-        const response = await axios.post("http://158.220.124.141:3002/actividad", formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
+        await this.api.put(`/usuario/${this.user.id}`, this.user);
+        this.message = `Usuario actualizado: ${this.user.cedula}`;
+        this.success = true;
+        this.resetForm();
+        this.fetchUsers();
+      } catch (error) {
+        this.handleApiError(error);
+        this.success = false;
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+    async deleteUser(id) {
+      if (confirm("¿Estás seguro de eliminar este usuario?")) {
+        try {
+          await this.api.delete(`/usuario/${id}`);
+          this.message = `Usuario eliminado: ${id}`;
+          this.success = true;
+          this.fetchUsers();
+        } catch (error) {
+          this.handleApiError(error);
+          this.success = false;
+        }
+      }
+    },
+    validateForm() {
+      this.errors = {};
+      if (!this.user.cedula) this.errors.cedula = "La cédula es obligatoria.";
+      if (!this.user.correo) this.errors.email = "El correo es obligatorio.";
+      else if (!this.validateEmail(this.user.correo)) this.errors.email = "El correo no es válido.";
+      if (!this.user.password) this.errors.password = "La contraseña es obligatoria.";
+      else if (this.user.password.length < 6) this.errors.password = "Debe tener al menos 6 caracteres.";
+      if (!this.user.rol) this.errors.rol = "El rol es obligatorio.";
+      return Object.keys(this.errors).length === 0;
+    },
+    validateEmail(email) {
+      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return regex.test(email);
+    },
+    resetMessages() {
+      this.message = "";
+      this.success = false;
+      this.errors = {};
+    },
+    resetForm() {
+      this.user = {
+        cedula: "",
+        correo: "",
+        password: "",
+        rol: "",
+      };
+    },
+    handleApiError(error) {
+      if (error.response?.data && Array.isArray(error.response.data)) {
+        error.response.data.forEach((errMsg) => {
+          if (errMsg.includes("correo")) {
+            this.errors.email = this.formatError(errMsg, "Correo");
           }
         });
-        this.actividades.push(response.data); // Agregar la nueva actividad a la lista
-        this.newActividad = { nombre: '', descripcion: '', fecha: '', foto: null }; // Limpiar formulario
-      } catch (err) {
-        console.error(err); // Ver más detalles del error
-        this.error = "Error al agregar la actividad. Intenta nuevamente.";
+      } else {
+        this.message = error.response?.data?.message || "Ocurrió un error al intentar crear el usuario.";
       }
     },
-
-    handleFileUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        this.newActividad.foto = file;
-      }
+    formatError(message, field) {
+      return `${field}: ${message}`;
     },
-    formatDate(dateString) {
-      const options = { year: "numeric", month: "long", day: "numeric" };
-      return new Date(dateString).toLocaleDateString("es-ES", options);
-    },
-    async deleteActividad(id) {
-      try {
-        await axios.delete(`http://158.220.124.141:3002/actividad/${id}`);
-        this.actividades = this.actividades.filter(actividad => actividad.id !== id);
-      } catch (err) {
-        this.error = "Error al eliminar la actividad. Intenta nuevamente.";
-      }
-    }
-  },
-  mounted() {
-    this.fetchActividades();
   },
 };
 </script>
+
 
 <style scoped>
 .container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 30px;
+  padding: 20px;
   background: #f9f9f9;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 h1, h2 {
@@ -186,7 +232,7 @@ h1, h2 {
 .form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
 }
 
 .form-group {
@@ -199,35 +245,34 @@ label {
   color: #333;
 }
 
-.input-field, .input-file {
-  padding: 12px;
+input, select {
+  padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 16px;
-  background-color: #f8f9fa;
-  transition: all 0.3s ease;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
-.input-field:focus, .input-file:focus {
-  border-color: #007BFF;
-  outline: none;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+input.invalid, select.invalid {
+  border-color: red;
 }
 
-.input-file {
-  background-color: #fff;
-  cursor: pointer;
+.error {
+  color: red;
+  font-size: 12px;
 }
 
 button {
-  padding: 12px 20px;
+  padding: 10px 15px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   background-color: #007BFF;
   color: white;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s;
+}
+
+button:disabled {
+  background-color: #cccccc;
 }
 
 button:hover {
@@ -250,17 +295,14 @@ button:hover {
 .user-item {
   display: flex;
   justify-content: space-between;
-  padding: 20px;
-  border-radius: 8px;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
 }
 
 .user-item button {
-  padding: 10px 15px;
+  padding: 5px 10px;
   font-size: 14px;
   cursor: pointer;
-  border-radius: 6px;
 }
 
 .btn-edit {
@@ -279,14 +321,13 @@ button:hover {
   background-color: #c82333;
 }
 
-.error {
-  color: red;
-  font-size: 14px;
-  font-weight: 500;
-}
-
 .success {
   color: green;
+  font-size: 14px;
+}
+
+.error {
+  color: red;
   font-size: 14px;
 }
 </style>

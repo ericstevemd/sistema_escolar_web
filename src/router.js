@@ -19,7 +19,7 @@ const routes = [
   { path: '/profesores',name:'ListaProfesores', component: ListaProfesores },
   { path: '/materias', name: 'ListaMaterias' ,component: materia },
  { path: '/actividades',name : 'ActividadesLista' ,component: AsistenciaComponent },
- // { path: '/profesor/subir-tareas', component: SubirTareasComponent },
+// { path: '/profesor/subir-tareas', component: SubirTareasComponent },
 //  { path: '/profesor/novedades', component: NovedadesComponent }, 
 ];
 
