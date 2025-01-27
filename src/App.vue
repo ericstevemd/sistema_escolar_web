@@ -9,8 +9,9 @@
           <ul class="sub-menu">
             <li><router-link to="/profesores">Profesor </router-link></li>
             <li><router-link to="/actividades">actividades</router-link></li>
-            <li><router-link to="/subir-tareas">Subir Tareas</router-link></li>
+            <li><router-link to="/curso">curso</router-link></li>
             <li><router-link to="/novedades">Novedades</router-link></li>
+            
             <li><router-link to="/materia">Materia </router-link></li>
        
           </ul>

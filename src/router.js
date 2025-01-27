@@ -8,6 +8,7 @@ import ListaProfesores from './components/profesores.vue';
 import materia from './components/materia.vue';
 import AsistenciaComponent from './components/AactividadesComponent.vue';
 import logincomponent from './components/logincomponent.vue';
+import cursocomponet from './components/cursocomponet.vue';
 
 
 
@@ -22,7 +23,7 @@ const routes = [
   { path: '/profesores',name:'ListaProfesores', component: ListaProfesores ,  meta: { requiresAuth: true }, },
   { path: '/materias', name: 'ListaMaterias' ,component: materia ,  meta: { requiresAuth: true },},
  { path: '/actividades',name : 'ActividadesLista' ,component: AsistenciaComponent ,  meta: { requiresAuth: true },},
-// { path: '/profesor/subir-tareas', component: SubirTareasComponent },
+  { path: '/cursos',name: 'CourseComponent' ,component: cursocomponet, meta: { requiresAuth: true }, },
 //  { path: '/profesor/novedades', component: NovedadesComponent }, 
 ];
 
